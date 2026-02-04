@@ -1,0 +1,67 @@
+<title>BotWORLD</title>
+<style>
+#content {background:#740ec4;width:100%;height:100%;overflow-x:hidden;overflow-y:hidden;position:absolute;left:0px;top:0px;z-index:1;}
+.bonzi {width:103px;height:144px;background-image:url("https://i.ibb.co/6RpK19Ss/bonzi.png");position:absolute;}
+.bubble {padding:4px;border:1px solid black;border-radius:4px;background:rgb(255 255 199);position:absolute;max-width:100px;max-height:100px;}
+.speech {overflow-y:scroll;}
+#log {
+	position:absolute;left:0px;top:0px;width:200px;height:200px;overflow-y:scroll;background:rgba(255,255,255,0.75);color:black;padding:5px;z-index:2;
+}
+.menu {width:100%;height:50px;background-color:rgb(150,0,220);position:absolute;bottom:0px;left:0px;align-items:center;z-index:3}
+#message {width:90%;height:30px;}
+#send {background:yellow; color:white; font-weight:bold; font-style:italic; text-shadow:2px 2px 3px rgba(0,0,0,0.8);}
+</style>
+<div id="content"></div>
+<div id="log"></div>
+<div class="menu"><button id="send" >send</button><input id="message" type="text"></div>
+<script src="bonzi.js"></script>
+<script defer>
+    let userList = {};
+	let userCount = 30;
+	
+	let lastMessage = [];
+	function sendMessage(txt,newUsername="You"){
+		if(newUsername == 'You'){message.value=''; log.innerHTML+=`<p>You: ${txt}</p><hr>`;}
+		let userNames = Object.keys(userList);
+		userNames.forEach(userKey => {
+			if(Math.random() > 0.8
+			&& userKey !== newUsername){
+				setTimeout(() => {userList[userKey].respond(txt);},(Math.floor(Math.random()*5)+3)*1000);
+			}
+		});
+		let thisC = Math.random();
+		if(lastMessage.length > 0 && thisC > 0.1)setTimeout(()=>{sendMessage(...lastMessage);},(Math.floor(Math.random()*3)+2)*1000);
+	}
+	for(let i=0;i<userCount;i++){
+		window.config.variety=0.80;
+		let newUser = window.Bonzi.generate.user(userCount);
+		window.config.variety=0.30;
+		let currentX = Math.floor(Math.random()*95).toString(); let currentY = (Math.floor(Math.random()*65)+5).toString();
+		let currentId=Math.random().toString().replace(".","");
+		content.insertAdjacentHTML('beforeend',`
+			<div class="bonzi" style="left:${currentX}%;top:${currentY}%;filter:hue-rotate(${Math.floor(Math.random()*360).toString()}deg);" id="${currentId}">
+				
+			</div>
+			<div class="bubble" style="left:${currentX}%;top:${currentY}%;margin-top:-20px;margin-left:-20px;">${newUser}</div>
+			<div class="bubble speech" style="left:${currentX}%;top:${currentY}%;margin-top:20px;margin-left:120px;visibility:hidden;" id="${currentId}_speech"></div>
+		`);
+		userList[newUser] = {
+			respond:(txt)=>{
+				let speechBubble = document.getElementById(currentId+"_speech");
+				let result = window.Bonzi.generate.message(newUser,txt);
+				let replying = '';
+				if(Math.random() > 0.5)replying=`<p style="color:lime;text-shadow:2px 2px 2px black;"> > ${txt}</p><br> `;
+				log.innerHTML+=`<p>${replying} ${newUser}: ${result}</p><hr>`;
+				log.scrollTop=9999;
+				if(Math.random() > 0.3)lastMessage=[result,newUser]
+				
+				speechBubble.innerHTML=result;
+				document.getElementById(currentId+"_speech").style.visibility="visible";
+				setTimeout(() => {document.getElementById(currentId+"_speech").style.visibility="hidden";},result.split(" ").length*1000);
+			}
+		}
+	}
+	
+	document.onkeyup = (e) => {if(e.key == "Enter")sendMessage(message.value);}
+	send.onclick = () => {sendMessage(message.value);}
+</script>
